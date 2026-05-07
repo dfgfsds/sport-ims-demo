@@ -1,0 +1,83 @@
+   [
+    
+    {
+              "ageGroup": "Above 16",
+              "ageGroupId": 81,
+              "amountPaid": 0,
+              "certificateUrl": null,
+              "chestNumber": null,
+              "clubId": "85",
+              "clubName": "MAHA SPORTS ACADEMY",
+              "createdAt": "2025-07-10T15:56:16",
+              "deleteStatus": true,
+              "districtId": 3,
+              "dob": "1977-01-15",
+
+              "eventId": 27,
+              "id": 21,
+              "paymentId": null,
+              "player": {
+                "name": "Amjad Khan",
+                "playerId": "TIRUPPUR250011"
+              },
+              "playerId": "TIRUPPUR250011",
+              "profileImageUrl": "https://sportims-api.justvy.com/uploads/20250710155604_fancy.png",
+              "regDate": "2025-07-10T15:56:16",
+              "remarks": null,
+              "result": null,
+              "selectedRaces": [
+                {
+                  "id": 43,
+                  "name": "200 M"
+                },
+                {
+                  "id": 44,
+                  "name": "400 M"
+                }
+              ],
+              "selectedRacesIds": [43, 44],
+              "skateCategory": "beginner",
+              "stateId": 29,
+              "updatedAt": "2025-07-10T15:56:16"
+            },
+                {
+              "ageGroup": "Above 16",
+              "ageGroupId": 81,
+              "amountPaid": 0,
+              "certificateUrl": null,
+              "chestNumber": null,
+              "clubId": "85",
+              "clubName": "MAHA SPORTS ACADEMY",
+              "createdAt": "2025-07-10T15:56:16",
+              "deleteStatus": true,
+              "districtId": 3,
+              "dob": "1977-01-15",
+
+              "eventId": 27,
+              "id": 21,
+              "paymentId": null,
+              "player": {
+                "name": "Amjad Khan",
+                "playerId": "TIRUPPUR250011"
+              },
+              "playerId": "TIRUPPUR250011",
+              "profileImageUrl": "https://sportims-api.justvy.com/uploads/20250710155604_fancy.png",
+              "regDate": "2025-07-10T15:56:16",
+              "remarks": null,
+              "result": null,
+              "selectedRaces": [
+                {
+                  "id": 43,
+                  "name": "200 M"
+                },
+                {
+                  "id": 44,
+                  "name": "400 M"
+                }
+              ],
+              "selectedRacesIds": [43, 44],
+              "skateCategory": "beginner",
+              "stateId": 29,
+              "updatedAt": "2025-07-10T15:56:16"
+            }
+        ]
