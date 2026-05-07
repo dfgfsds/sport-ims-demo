@@ -46,8 +46,8 @@ const EventParticipantsDetails = () => {
     useEffect(() => {
         if (event) {
             const filtered = event?.filter((p: any) =>
-                p?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p?.clubName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p?.player?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p?.player?.clubName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p?.chestNumber?.toString().includes(searchQuery)
             );
             setFilteredParticipants(filtered);

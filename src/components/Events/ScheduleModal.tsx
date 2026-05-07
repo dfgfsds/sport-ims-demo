@@ -37,7 +37,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose, event, o
   const getEligiblePlayers = () => {
     if (!selectedRace || !selectedAgeGroup || !selectedCategory) return [];
 
-    const selectedAgeGroupData = event.ageGroups.find(ag => ag.id === selectedAgeGroup);
+    const selectedAgeGroupData:any = event.ageGroups.find(ag => ag.id === selectedAgeGroup);
     if (!selectedAgeGroupData) return [];
 
     return mockPlayers.filter(player => {

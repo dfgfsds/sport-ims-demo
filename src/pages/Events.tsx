@@ -12,6 +12,7 @@ import { Event, Schedule } from '../types';
 import axios from 'axios';
 import { exportToExcel } from '../ExportToExcel/ExportToExcel';
 import EditEventModal from '../components/Events/EditEventModal';
+import EventPayment from '../components/Events/EventPayment';
 
 const Events: React.FC = () => {
   const baseURL = import.meta.env.VITE_API_BASE_URL;
@@ -25,7 +26,14 @@ const Events: React.FC = () => {
   const [activeView, setActiveView] = React.useState<'events' | 'schedules' | 'results'>('events');
   const [modalMode, setModalMode] = React.useState<'create' | 'view' | 'edit'>('create');
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [paymentData, setPaymentData] = useState("");
+  const [paymentModal, setPaymentModal] = useState(false);
 
+  const handleViewPayment = (event: any) => {
+    setPaymentData(event);
+    setPaymentModal(true);
+
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -167,6 +175,18 @@ const Events: React.FC = () => {
     { key: 'eventFee', label: 'Event Fee', sortable: true },
 
     { key: 'registrationCount', label: 'Total Participants', sortable: true },
+
+    {
+      key: 'registrationCount', label: 'Payment',
+      render: (value: any, event: any) => (
+        <div className="flex items-center space-x-2">
+          <Button size="sm" variant="secondary" title="View Details"
+            onClick={() => handleViewPayment(event)}>
+            <Plus size={16} />
+          </Button>
+        </div>
+      ),
+    },
 
     {
       key: 'actions',
@@ -494,6 +514,18 @@ const Events: React.FC = () => {
           }}
           schedule={selectedSchedule}
           onSave={handleUpdateResults}
+        />
+      )}
+
+
+      {paymentModal && (
+        <EventPayment
+          isOpen={paymentModal}
+          onClose={() => {
+            setPaymentModal(false);
+            setPaymentData("");
+          }}
+          event={paymentData}
         />
       )}
     </div>

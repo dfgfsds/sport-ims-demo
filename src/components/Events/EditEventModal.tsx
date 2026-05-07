@@ -46,6 +46,7 @@ const EditEventModal: React.FC<any> = ({
         raceMatrix: [],
         id: '',
         tshirt_size_Status: false,
+        certificateTemplatePath: '',
     });
 
 
@@ -267,6 +268,7 @@ const EditEventModal: React.FC<any> = ({
                 bannerUrl: event.bannerUrl || '',
                 advertisementUrl: event.advertisementUrl || '',
                 tshirt_size_Status: Boolean(event.tshirt_size_Status),
+                certificateTemplatePath: event?.certificateTemplatePath,
             });
 
             // 🔹 RACES
@@ -457,6 +459,7 @@ const EditEventModal: React.FC<any> = ({
 
         let bannerUrl = eventData.bannerUrl;
         let advertisementUrl = eventData.advertisementUrl;
+        let certificateTemplatePath = eventData?.certificateTemplatePath
 
         // if (bannerFile) {
         //   bannerUrl = await handleFileUpload(bannerFile);
@@ -469,6 +472,7 @@ const EditEventModal: React.FC<any> = ({
             ...eventData,
             bannerUrl,
             advertisementUrl,
+            certificateTemplatePath,
         };
 
         const racesForSkateCategories = ageGroups.reduce((acc: Record<string, any>, ageGroup) => {
@@ -1009,6 +1013,53 @@ const EditEventModal: React.FC<any> = ({
                             </div>
                         )}
                     </FormField>
+
+                    <FormField label="Certificate Template Image">
+                        {eventData.certificateTemplatePath ? (
+                            <a
+                                href={eventData.certificateTemplatePath}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                            >
+                                View certificateTemplatePath
+                            </a>
+                        ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg"
+                                    onChange={async (e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            const file = e.target.files[0];
+                                            const formData = new FormData();
+                                            formData.append('file', file);
+                                            try {
+                                                const response = await axios.post(
+                                                    'https://sportims-api.justvy.com/upload/image/',
+                                                    formData
+                                                );
+                                                if (response.data?.url) {
+                                                    setAdFile(file);
+                                                    setEventData((prev: any) => ({
+                                                        ...prev,
+                                                        certificateTemplatePath: response.data.url,
+                                                    }));
+                                                }
+                                            } catch (error) {
+                                                alert('Failed to upload certificateTemplatePath image. Please try again.');
+                                            }
+                                        }
+                                    }}
+                                    className="mt-2 text-sm text-gray-600"
+                                // disabled={isReadOnly}
+                                />
+                                <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                            </div>
+                        )}
+                    </FormField>
+
                     <div className='flex justify-end pb-1'>
                         <Button
                             onClick={() => handleSaveEvent()}
