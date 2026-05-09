@@ -41,7 +41,7 @@ const EventParticipantsDetails =
 
         // --- Modal States ---
         const [showModal, setShowModal] = useState(false);
-        const [downloadType, setDownloadType] = useState<'all' | 'club' | 'individual'>('all');
+        const [downloadType, setDownloadType] = useState<'all' | 'club' | 'individual' | 'event_only'>('all');
         const [selectedClubId, setSelectedClubId] = useState('');
         const [selectedRegId, setSelectedRegId] = useState('');
         const [isDownloading, setIsDownloading] = useState(false);
@@ -66,15 +66,28 @@ const EventParticipantsDetails =
             try {
                 let queryParams = "";
 
+                // 1. ALL TYPE: ?all=true
                 if (downloadType === 'all') {
-                    // Ellarukum download panna event_id mattum pothum
-                    queryParams = `?all=true`;
-                } else if (downloadType === 'club') {
-                    if (!selectedClubId) { alert("Please select a club"); setIsDownloading(false); return; }
-                    queryParams = `?club_wise=true&club_id=${selectedClubId}`;
-                } else {
-                    // Individual (Reg ID or Chest No - renduukkume registration_id pothum)
-                    if (!selectedRegId) { alert("Please select a participant"); setIsDownloading(false); return; }
+                    queryParams = ``;
+                }
+                // 2. EVENT WISE ONLY: No query params (Only eventId in URL)
+                else if (downloadType === 'event_only') {
+                    queryParams = "?club_wise=true";
+                }
+                // 3 & 4. CLUB WISE LOGIC
+                else if (downloadType === 'club') {
+                    if (selectedClubId) {
+                        // Type 4: Specific Club ID (club_wise=true & club_id)
+                        queryParams = `?club_id=${selectedClubId}`;
+                    }
+                }
+                // 5. INDIVIDUAL (Reg ID or Chest No)
+                else if (downloadType === 'individual') {
+                    if (!selectedRegId) {
+                        alert("Please select a participant");
+                        setIsDownloading(false);
+                        return;
+                    }
                     queryParams = `?club_wise=false&registration_id=${selectedRegId}`;
                 }
 
@@ -93,15 +106,15 @@ const EventParticipantsDetails =
                     document.body.removeChild(anchor);
 
                     setShowModal(false);
-                    // Reset fields
+                    // Fields reset panrathu
                     setSelectedRegId('');
                     setSelectedClubId('');
                 } else {
                     alert("Download link not found.");
                 }
             } catch (error) {
-                console.error(error);
-                alert("API error, check console.");
+                console.error("API Error:", error);
+                alert("Server error, console check pannu machan.");
             } finally {
                 setIsDownloading(false);
             }
@@ -474,7 +487,7 @@ const EventParticipantsDetails =
                 </Card>
 
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                         <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
                             <div className="mb-6 flex items-center justify-between border-b pb-3">
                                 <h3 className="text-xl font-bold text-gray-800">Download Certificates</h3>
@@ -484,135 +497,146 @@ const EventParticipantsDetails =
                             </div>
 
                             <div className="space-y-5">
-                                {/* Main Toggle: ALL | CLUB | INDIVIDUAL */}
-                                <div className="flex rounded-lg bg-gray-100 p-1">
-                                    {['all', 'club', 'individual'].map((type) => (
+                                {/* 5-Type Selection Buttons */}
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Category</label>
+                                    <div className="grid grid-cols-2 gap-2">
                                         <button
-                                            key={type}
-                                            onClick={() => setDownloadType(type as any)}
-                                            className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-[10px] font-bold transition-all ${downloadType === type ? 'bg-white text-[#76933c] shadow' : 'text-gray-500'}`}
+                                            onClick={() => setDownloadType('all')}
+                                            className={`rounded-lg border py-2 text-xs font-bold transition-all ${downloadType === 'all' ? 'bg-[#76933c] text-white border-[#76933c]' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
                                         >
-                                            {type === 'all' && <Users size={14} />}
-                                            {type === 'club' && <Users size={14} />}
-                                            {type === 'individual' && <User size={14} />}
-                                            {type.toUpperCase()}
+                                            ALL
                                         </button>
-                                    ))}
+                                        <button
+                                            onClick={() => setDownloadType('event_only')}
+                                            className={`rounded-lg border py-2 text-xs font-bold transition-all ${downloadType === 'event_only' ? 'bg-[#76933c] text-white border-[#76933c]' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
+                                        >
+                                            CLUB WISE
+                                        </button>
+                                        <button
+                                            onClick={() => setDownloadType('club')}
+                                            className={`rounded-lg border py-2 text-xs font-bold transition-all ${downloadType === 'club' ? 'bg-[#76933c] text-white border-[#76933c]' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
+                                        >
+                                            CLUB ID WISE
+                                        </button>
+                                        <button
+                                            onClick={() => setDownloadType('individual')}
+                                            className={`rounded-lg border py-2 text-xs font-bold transition-all ${downloadType === 'individual' ? 'bg-[#76933c] text-white border-[#76933c]' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
+                                        >
+                                            INDIVIDUAL
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* Conditional Inputs */}
-                                {downloadType === 'all' && (
-                                    <div className="rounded-lg bg-blue-50 p-4 text-center text-sm text-blue-700 border border-blue-200">
-                                        Certificates will be generated for <b>all participants</b> in this event.
-                                    </div>
-                                )}
-
-                                {downloadType === 'club' && (
-                                    <div className="animate-in slide-in-from-top-2 duration-300">
-                                        <label className="mb-2 block text-xs font-bold text-gray-500 uppercase">Select Club</label>
-                                        <select
-                                            className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-[#76933c]"
-                                            value={selectedClubId}
-                                            onChange={(e) => setSelectedClubId(e.target.value)}
-                                        >
-                                            <option value="">-- Choose Club --</option>
-                                            {clubs.map(club => (
-                                                <option key={club.id} value={club.id}>{club.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {downloadType === 'individual' && (
-                                    <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                                        {/* 4th Type Switch: Reg ID vs Chest No */}
-                                        <div className="flex gap-4 items-center justify-center text-sm">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="radio" checked={searchBy === 'regId'} onChange={() => setSearchBy('regId')} className="accent-[#76933c]" />
-                                                Reg ID
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="radio" checked={searchBy === 'chestNo'} onChange={() => setSearchBy('chestNo')} className="accent-[#76933c]" />
-                                                Chest No
-                                            </label>
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-2 block text-xs font-bold text-gray-500 uppercase">
-                                                Select Participant ({searchBy === 'regId' ? 'by Name' : 'by Chest'})
-                                            </label>
+                                {/* Sub-options based on selection */}
+                                <div className="min-h-[100px] border-t pt-4">
+                                    {downloadType === 'club' && (
+                                        <div className="animate-in fade-in duration-300">
+                                            <label className="mb-2 block text-[10px] font-bold text-gray-400 uppercase">Select Specific Club (Optional)</label>
                                             <select
-                                                className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-[#76933c]"
+                                                className="w-full rounded-lg border border-gray-200 p-3 text-sm outline-none focus:ring-2 focus:ring-[#76933c]"
+                                                value={selectedClubId}
+                                                onChange={(e) => setSelectedClubId(e.target.value)}
+                                            >
+                                                <option value="">-- All Clubs --</option>
+                                                {clubs.map(club => (
+                                                    <option key={club.id} value={club.id}>{club.name}</option>
+                                                ))}
+                                            </select>
+                                            <p className="mt-2 text-[10px] text-gray-500 italic font-medium">
+                                                {selectedClubId ? "* Specific Club logic selected." : "* General Club Wise logic selected."}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {downloadType === 'individual' && (
+                                        <div className="space-y-4 animate-in fade-in duration-300">
+                                            <div className="flex gap-4 justify-center text-[11px] font-bold uppercase text-gray-600">
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" checked={searchBy === 'regId'} onChange={() => setSearchBy('regId')} className="accent-[#76933c]" /> Reg ID
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" checked={searchBy === 'chestNo'} onChange={() => setSearchBy('chestNo')} className="accent-[#76933c]" /> Chest No
+                                                </label>
+                                            </div>
+                                            <select
+                                                className="w-full rounded-lg border border-gray-200 p-3 text-sm outline-none focus:ring-2 focus:ring-[#76933c]"
                                                 value={selectedRegId}
                                                 onChange={(e) => setSelectedRegId(e.target.value)}
                                             >
-                                                <option value="">-- Select --</option>
+                                                <option value="">-- Choose Participant --</option>
                                                 {eventData.map(item => (
                                                     <option key={item.id} value={item.id}>
-                                                        {searchBy === 'regId'
-                                                            ? `${item.player?.name} (ID: ${item.registrationId || item.id})`
-                                                            : `Chest: ${item.chestNumber} - ${item.player?.name}`
-                                                        }
+                                                        {searchBy === 'regId' ? `${item.player?.name} (${item.registrationId})` : `Chest: ${item.chestNumber} - ${item.player?.name}`}
                                                     </option>
                                                 ))}
                                             </select>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+
+                                    {/* Simple Message for All/Event Only */}
+                                    {(downloadType === 'all' || downloadType === 'event_only') && (
+                                        <div className="rounded-lg bg-gray-50 p-4 text-center">
+                                            <p className="text-sm font-medium text-gray-600">
+                                                {downloadType === 'all' ? "Full event certificates download panna porom." : "Event ID wise base download start aagum."}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <button
                                     onClick={handleGenerateCertificate}
                                     disabled={isDownloading}
-                                    className={`w-full rounded-lg py-4 font-bold uppercase text-white shadow-lg transition-all ${isDownloading ? 'bg-gray-400' : 'bg-[#76933c] hover:bg-[#5e7630]'}`}
+                                    className={`w-full rounded-lg py-4 font-bold uppercase text-white shadow-lg transition-all ${isDownloading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#76933c] hover:bg-[#5e7630] active:scale-95'}`}
                                 >
-                                    {isDownloading ? 'Processing...' : 'Download PDF'}
+                                    {isDownloading ? 'Generating PDF...' : 'Download PDF'}
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-{showRaceModal && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between border-b pb-3">
-                <h3 className="text-lg font-bold text-gray-800">Export Race Summary</h3>
-                <button onClick={() => setShowRaceModal(false)} className="text-gray-400 hover:text-red-500">
-                    <X size={20} />
-                </button>
-            </div>
+                {showRaceModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                        <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+                            <div className="mb-4 flex items-center justify-between border-b pb-3">
+                                <h3 className="text-lg font-bold text-gray-800">Export Race Summary</h3>
+                                <button onClick={() => setShowRaceModal(false)} className="text-gray-400 hover:text-red-500">
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-            <div className="space-y-6">
-                <div>
-                    <label className="mb-3 block text-xs font-bold text-gray-500 uppercase">Select Gender</label>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button 
-                            onClick={() => setSelectedGender('male')}
-                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'male' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
-                        >
-                            MALE
-                        </button>
-                        <button 
-                            onClick={() => setSelectedGender('female')}
-                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'female' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
-                        >
-                            FEMALE
-                        </button>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="mb-3 block text-xs font-bold text-gray-500 uppercase">Select Gender</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => setSelectedGender('male')}
+                                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'male' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
+                                        >
+                                            MALE
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedGender('female')}
+                                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'female' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
+                                        >
+                                            FEMALE
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Download Button - Only enabled if gender is selected */}
+                                <button
+                                    onClick={exportRaceGenderAge}
+                                    disabled={!selectedGender || isExporting}
+                                    className={`w-full rounded-lg py-3 font-bold uppercase text-white shadow-md transition-all ${(!selectedGender || isExporting) ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#76933c] hover:bg-[#5e7630] active:scale-95'}`}
+                                >
+                                    {isExporting ? 'Exporting...' : 'Download Excel'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                {/* Download Button - Only enabled if gender is selected */}
-                <button
-                    onClick={exportRaceGenderAge}
-                    disabled={!selectedGender || isExporting}
-                    className={`w-full rounded-lg py-3 font-bold uppercase text-white shadow-md transition-all ${(!selectedGender || isExporting) ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#76933c] hover:bg-[#5e7630] active:scale-95'}`}
-                >
-                    {isExporting ? 'Exporting...' : 'Download Excel'}
-                </button>
-            </div>
-        </div>
-    </div>
-)}
+                )}
             </div>
         );
     };
