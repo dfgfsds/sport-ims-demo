@@ -96,17 +96,49 @@ const EventParticipantsDetails =
                 );
 
                 if (response.data.status === "success" && response.data.download_url) {
+                    // const link = response.data.download_url;
+                    // const anchor = document.createElement("a");
+                    // anchor.href = link;
+                    // anchor.setAttribute("download", `Certificates_${Date.now()}.pdf`);
+                    // anchor.setAttribute("target", "_blank");
+                    // document.body.appendChild(anchor);
+                    // anchor.click();
+                    // document.body.removeChild(anchor);
+                    // window.location.assign(link);
+                    // setTimeout(() => {
+                    //     setShowModal(false);
+                    //     setIsDownloading(false);
+                    //     setSelectedRegId('');
+                    //     setSelectedClubId('');
+                    // }, 1000);
+                    // setShowModal(false);
+                    // // Fields reset panrathu
+                    // setSelectedRegId('');
+                    // setSelectedClubId('');
+
                     const link = response.data.download_url;
+
+                    // Create a hidden anchor tag
                     const anchor = document.createElement("a");
                     anchor.href = link;
-                    anchor.setAttribute("download", `Certificates_${Date.now()}.pdf`);
-                    anchor.setAttribute("target", "_blank");
+                    anchor.target = "_blank"; // This opens it in a new tab
+                    anchor.rel = "noopener noreferrer"; // Best practice for security/performance
+
+                    // Append, click, and remove
                     document.body.appendChild(anchor);
                     anchor.click();
-                    document.body.removeChild(anchor);
 
+                    // Safety fallback: if the tab didn't open, use location.assign 
+                    // to at least start the download in the current tab
+                    setTimeout(() => {
+                        if (anchor.parentNode) {
+                            document.body.removeChild(anchor);
+                        }
+                    }, 100);
+
+                    // Reset UI
                     setShowModal(false);
-                    // Fields reset panrathu
+                    setIsDownloading(false);
                     setSelectedRegId('');
                     setSelectedClubId('');
                 } else {
@@ -421,7 +453,7 @@ const EventParticipantsDetails =
                             onClick={() => setShowModal(true)}
                             className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-xs font-bold uppercase text-white hover:bg-blue-700 shadow-md transition-all active:scale-95"
                         >
-                            <Download size={16} /> Certificate
+                            <Download size={16} /> Chest No Certificates
                         </button>
                     </div>
                 </div>
