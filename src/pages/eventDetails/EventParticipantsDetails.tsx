@@ -578,7 +578,10 @@ const EventParticipantsDetails =
                                     {(downloadType === 'all' || downloadType === 'event_only') && (
                                         <div className="rounded-lg bg-gray-50 p-4 text-center">
                                             <p className="text-sm font-medium text-gray-600">
-                                                {downloadType === 'all' ? "Full event certificates download panna porom." : "Event ID wise base download start aagum."}
+                                                {downloadType === 'all'
+                                                    ? "Preparing to download certificates for all participants."
+                                                    : "Starting download based on the specific Event ID."
+                                                }
                                             </p>
                                         </div>
                                     )}
