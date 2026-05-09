@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Card from '../../components/UI/Card';
 import Table from '../../components/UI/Table';
-import { ArrowLeft, Download, Edit, Eye, Search } from 'lucide-react';
+import { ArrowLeft, Download, Edit, Eye, FileSpreadsheet, Search } from 'lucide-react';
 import Button from '../../components/UI/Button';
 import EventAdminModal from './EventAdminModal';
 import RegistrationModal from './EventAdminModal';
@@ -415,6 +415,142 @@ const EventParticipantsDetails = () => {
         serialNo: index + 1,
     }));
 
+      const SummaryBtn = ({
+            label,
+            onClick,
+        }: any) => (
+            <button
+                onClick={
+                    onClick
+                }
+                className="flex items-center justify-center gap-2 rounded bg-[#76933c] px-4 py-2 text-xs font-bold uppercase text-white shadow transition-all hover:bg-[#5e7630]"
+            >
+                <FileSpreadsheet
+                    size={16}
+                />
+
+                {label}
+            </button>
+        );
+
+                const exportDistrictCategory = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseURL}stats_export/district-club-summary-excel?eventId=${eventId}`
+                );
+                if (response.data.success && response.data.download_link) {
+                    const link = response.data.download_link;
+
+                    // Anchor tag logic for forced download
+                    const anchor = document.createElement("a");
+                    anchor.href = link;
+                    anchor.setAttribute("download", "Gender_Age_Summary.xlsx");
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+
+                    // Success Message in English
+                    console.log("Download started successfully.");
+                } else {
+                    // Error Message in English
+                    alert("Failed to generate download link. Please try again.");
+                }
+            } catch (error) {
+                console.error("Export error:", error);
+                // Catch Error Message in English
+                alert("An error occurred while exporting the Excel report.");
+            }
+        }
+
+        const exportAgeCategory = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseURL}stats_export/event-category-age-summary-excel?eventId=${eventId}`
+                );
+                if (response.data.success && response.data.download_link) {
+                    const link = response.data.download_link;
+
+                    // Anchor tag logic for forced download
+                    const anchor = document.createElement("a");
+                    anchor.href = link;
+                    anchor.setAttribute("download", "Gender_Age_Summary.xlsx");
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+
+                    // Success Message in English
+                    console.log("Download started successfully.");
+                } else {
+                    // Error Message in English
+                    alert("Failed to generate download link. Please try again.");
+                }
+            } catch (error) {
+                console.error("Export error:", error);
+                // Catch Error Message in English
+                alert("An error occurred while exporting the Excel report.");
+            }
+        }
+
+        const exportGenderAge = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseURL}stats_export/event-gender-summary-excel?eventId=${eventId}`
+                );
+
+                if (response.data.success && response.data.download_link) {
+                    const link = response.data.download_link;
+
+                    // Anchor tag logic for forced download
+                    const anchor = document.createElement("a");
+                    anchor.href = link;
+                    anchor.setAttribute("download", "Gender_Age_Summary.xlsx");
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+
+                    // Success Message in English
+                    console.log("Download started successfully.");
+                } else {
+                    // Error Message in English
+                    alert("Failed to generate download link. Please try again.");
+                }
+            } catch (error) {
+                console.error("Export error:", error);
+                // Catch Error Message in English
+                alert("An error occurred while exporting the Excel report.");
+            }
+        }
+
+        const exportRaceGenderAge = async () => {
+            try {
+                const response = await axios.get(
+                    `${baseURL}stats_export/event-race-summary-excel?eventId=${eventId}`
+                );
+
+                if (response.data.success && response.data.download_link) {
+                    const link = response.data.download_link;
+
+                    // Anchor tag logic for forced download
+                    const anchor = document.createElement("a");
+                    anchor.href = link;
+                    anchor.setAttribute("download", "Gender_Age_Summary.xlsx");
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+
+                    // Success Message in English
+                    console.log("Download started successfully.");
+                } else {
+                    // Error Message in English
+                    alert("Failed to generate download link. Please try again.");
+                }
+            } catch (error) {
+                console.error("Export error:", error);
+                // Catch Error Message in English
+                alert("An error occurred while exporting the Excel report.");
+            }
+        }
+
     return (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold flex">
@@ -469,6 +605,37 @@ const EventParticipantsDetails = () => {
                             Export
                         </button>
                     </div>
+                </div>
+
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-2">
+
+                    <SummaryBtn
+                        label="Gender & Age Wise"
+                        onClick={
+                            exportGenderAge
+                        }
+                    />
+
+                    <SummaryBtn
+                        label="Age & Category Wise"
+                        onClick={
+                            exportAgeCategory
+                        }
+                    />
+
+                    <SummaryBtn
+                        label="District & Category"
+                        onClick={
+                            exportDistrictCategory
+                        }
+                    />
+
+                    <SummaryBtn
+                        label="Race Gender Age"
+                        onClick={
+                            exportRaceGenderAge
+                        }
+                    />  
                 </div>
 
                 <div className="p-6">
