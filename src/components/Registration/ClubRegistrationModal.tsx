@@ -327,8 +327,8 @@ const ClubRegistrationModal: React.FC<ClubRegistrationModalProps> = ({ isOpen, o
     setError('');
 
     try {
-      // const response = await axios.post(`${baseUrl}/clubs/register`, formData);
-        const response = await axios.post(`${baseUrl}/clubs/register-approved`, formData);
+      const response = await axios.post(`${baseUrl}/clubs/register`, formData);
+        // const response = await axios.post(`${baseUrl}/clubs/register-approved`, formData);
       if (response) {
         onClose();
         setFormData({

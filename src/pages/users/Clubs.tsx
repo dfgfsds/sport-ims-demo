@@ -320,6 +320,7 @@ const clubsData: React.FC = () => {
         isOpen={resetPasswordMode}
         onClose={() => setResetPasswordMode(false)}
         club={selectedClub}
+             fetchClubs={fetchClubs()}
       />
     </div>
   );

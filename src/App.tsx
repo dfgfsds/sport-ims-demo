@@ -57,6 +57,7 @@ import EventAdminRegistrations from './pages/eventAdmin/EventParticipantsDetails
 import { ProtectedRoute } from './ProtectedRoute';
 import { PlayerProvider } from './context/PlayerContext';
 import EventAdmins from './pages/users/EventAdmins';
+import RegisterClub from './pages/RegisterClub';
 
 function App() {
   const clubId: any = 1;
@@ -77,140 +78,142 @@ function App() {
         pauseOnHover
         draggable
       />
-       <PlayerProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <PlayerProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+              <Route path="registerClub" element={<RegisterClub />} />
 
-        {/* Admin Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route
-            path="/"
-            element={<Layout />}
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="users/players" element={<Players />} />
-            <Route path="users/clubs" element={<Clubs />} />
-            <Route path="users/districts" element={<Districts />} />
-            <Route path="users/states" element={<States />} />
-            <Route path="users/admins" element={<Admins />} />
-            <Route path="users/eventAdmin" element={<EventAdmins />} />
-            <Route path="approvals/players" element={<PlayersApproval />} />
-            <Route path="approvals/clubs" element={<ClubsApproval />} />
-            <Route path="approvals/districts" element={<DistrictsApproval />} />
-            <Route path="approvals/states" element={<StatesApproval />} />
-            <Route path="events" element={<Events />} />
-            <Route path="/eventsDetails/participation" element={<EventParticipation />} />
-            <Route path="/eventsDetails/event-participation/:eventId" element={<EventParticipantsDetails />} />
-            <Route path="/eventsDetails/payment" element={<PaymentReport />} />
-            <Route path="/eventOfficial" element={<EventOfficial />} />
-            <Route path="/eventOrganisers" element={<EventOrganisers />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="news" element={<News />} />
-          </Route>
-        </Route>
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route
+              path="/"
+              element={<Layout />}
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="users/players" element={<Players />} />
+              <Route path="users/clubs" element={<Clubs />} />
+              <Route path="users/districts" element={<Districts />} />
+              <Route path="users/states" element={<States />} />
+              <Route path="users/admins" element={<Admins />} />
+              <Route path="users/eventAdmin" element={<EventAdmins />} />
+              <Route path="approvals/players" element={<PlayersApproval />} />
+              <Route path="approvals/clubs" element={<ClubsApproval />} />
+              <Route path="approvals/districts" element={<DistrictsApproval />} />
+              <Route path="approvals/states" element={<StatesApproval />} />
+              <Route path="events" element={<Events />} />
+              <Route path="/eventsDetails/participation" element={<EventParticipation />} />
+              <Route path="/eventsDetails/event-participation/:eventId" element={<EventParticipantsDetails />} />
+              <Route path="/eventsDetails/payment" element={<PaymentReport />} />
+              <Route path="/eventOfficial" element={<EventOfficial />} />
+              <Route path="/eventOrganisers" element={<EventOrganisers />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="news" element={<News />} />
 
-        {/* Player Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['player']} />}>
-          <Route
-            path="/player"
-            element={<PlayerLayout />}
-          >
-            <Route index element={<PlayerDashboard />} />
-            <Route path="events" element={<UpcomingEvents />} />
-            <Route path="my-events" element={<MyEvents />} />
-            <Route path="profile" element={<PlayerProfile />} />
+            </Route>
           </Route>
-        </Route>
-        {/* Event Official Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['official']} />}>
-          <Route
-            path="/official"
-            element={<OfficialLayout />}
-          >
-            <Route index element={<OfficialDashboard />} />
-            <Route path="schedules" element={<ScheduleManagement />} />
-            <Route path="update-results" element={<UpdateResults />} />
-            <Route path="results" element={<ResultsView />} />
-            <Route path="participants" element={<ParticipantsView />} />
-            <Route path="reports" element={<ReportsPage />} />
-          </Route>
-        </Route>
 
-        {/* Club Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['club']} />}>
-          <Route
-            path="/club"
-            element={<ClubLayout />}
-          >
-            <Route index element={<ClubDashboard />} />
-            <Route path="players" element={<ClubPlayers clubId={clubId} />} />
-            <Route path="events" element={<ClubEvents clubId={clubId} />} />
-            <Route path="reports" element={<ClubReports clubId={clubId} />} />
-            <Route path="profile" element={<ClubProfile clubId={clubId} />} />
+          {/* Player Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['player']} />}>
+            <Route
+              path="/player"
+              element={<PlayerLayout />}
+            >
+              <Route index element={<PlayerDashboard />} />
+              <Route path="events" element={<UpcomingEvents />} />
+              <Route path="my-events" element={<MyEvents />} />
+              <Route path="profile" element={<PlayerProfile />} />
+            </Route>
           </Route>
-        </Route>
-
-        {/* State Secretary Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['state_secretary']} />}>
-          <Route
-            path="/state"
-            element={<StateLayout />}
-          >
-            <Route index element={<StateDashboard />} />
-            <Route path="club" element={<StateClubs stateId={stateId} />} />
-            <Route path="players" element={<ClubPlayers clubId={clubId} />} />
-            <Route path="events" element={<StateEvent />} />
-            <Route path="reports" element={<ClubReports clubId={clubId} />} />
-            <Route path="profile" element={<StateProfile stateId={stateId} stateSecretaryId={stateSecretaryId} />} />
+          {/* Event Official Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['official']} />}>
+            <Route
+              path="/official"
+              element={<OfficialLayout />}
+            >
+              <Route index element={<OfficialDashboard />} />
+              <Route path="schedules" element={<ScheduleManagement />} />
+              <Route path="update-results" element={<UpdateResults />} />
+              <Route path="results" element={<ResultsView />} />
+              <Route path="participants" element={<ParticipantsView />} />
+              <Route path="reports" element={<ReportsPage />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* District Secretary Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['district_secretary']} />}>
-          <Route
-            path="/district"
-            element={<DistrictLayout />}
-          >
-            <Route index element={<DistrictDashboard />} />
-            <Route path="club" element={<DistrictClubs districtId={districtId} />} />
-            <Route path="players" element={<ClubPlayers clubId={clubId} />} />
-            <Route path="events" element={<DistrickEvents  />} />
-            <Route path="reports" element={<ClubReports clubId={clubId} />} />
-            <Route path="profile" element={<DistrictProfile districtId={districtId} districtSecretaryId={districtSecretaryId} />} />
+          {/* Club Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['club']} />}>
+            <Route
+              path="/club"
+              element={<ClubLayout />}
+            >
+              <Route index element={<ClubDashboard />} />
+              <Route path="players" element={<ClubPlayers clubId={clubId} />} />
+              <Route path="events" element={<ClubEvents clubId={clubId} />} />
+              <Route path="reports" element={<ClubReports clubId={clubId} />} />
+              <Route path="profile" element={<ClubProfile clubId={clubId} />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Organiser Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['event_organiser']} />}>
-          <Route
-            path="/organiser"
-            element={<OrganiserLayout />}
-          >
-            <Route index element={<DistrictDashboard />} />
-            <Route path="club" element={<ClubsOrganiser districtId={districtId} />} />
-            <Route path="district" element={<District districtId={districtId} />} />
-            <Route path="events" element={<DistrickEvents  />} />
-            <Route path="reports" element={<ClubReports clubId={clubId} />} />
-            <Route path="profile" element={<DistrictProfile districtId={districtId} districtSecretaryId={districtSecretaryId} />} />
+          {/* State Secretary Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['state_secretary']} />}>
+            <Route
+              path="/state"
+              element={<StateLayout />}
+            >
+              <Route index element={<StateDashboard />} />
+              <Route path="club" element={<StateClubs stateId={stateId} />} />
+              <Route path="players" element={<ClubPlayers clubId={clubId} />} />
+              <Route path="events" element={<StateEvent />} />
+              <Route path="reports" element={<ClubReports clubId={clubId} />} />
+              <Route path="profile" element={<StateProfile stateId={stateId} stateSecretaryId={stateSecretaryId} />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Event Admin Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['eventAdmin']} />}>
-          <Route
-            path="/eventAdmin"
-            element={<EventAdminLayout />}
-          >
-            <Route index element={<EventAdminRegistrations  />} />
-            <Route path="registrations" element={<EventAdminRegistrations />} />
-            {/* <Route path="district" element={<District districtId={districtId} />} />
+          {/* District Secretary Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['district_secretary']} />}>
+            <Route
+              path="/district"
+              element={<DistrictLayout />}
+            >
+              <Route index element={<DistrictDashboard />} />
+              <Route path="club" element={<DistrictClubs districtId={districtId} />} />
+              <Route path="players" element={<ClubPlayers clubId={clubId} />} />
+              <Route path="events" element={<DistrickEvents />} />
+              <Route path="reports" element={<ClubReports clubId={clubId} />} />
+              <Route path="profile" element={<DistrictProfile districtId={districtId} districtSecretaryId={districtSecretaryId} />} />
+            </Route>
+          </Route>
+
+          {/* Organiser Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['event_organiser']} />}>
+            <Route
+              path="/organiser"
+              element={<OrganiserLayout />}
+            >
+              <Route index element={<DistrictDashboard />} />
+              <Route path="club" element={<ClubsOrganiser districtId={districtId} />} />
+              <Route path="district" element={<District districtId={districtId} />} />
+              <Route path="events" element={<DistrickEvents />} />
+              <Route path="reports" element={<ClubReports clubId={clubId} />} />
+              <Route path="profile" element={<DistrictProfile districtId={districtId} districtSecretaryId={districtSecretaryId} />} />
+            </Route>
+          </Route>
+
+          {/* Event Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['eventAdmin']} />}>
+            <Route
+              path="/eventAdmin"
+              element={<EventAdminLayout />}
+            >
+              <Route index element={<EventAdminRegistrations />} />
+              <Route path="registrations" element={<EventAdminRegistrations />} />
+              {/* <Route path="district" element={<District districtId={districtId} />} />
           <Route path="events" element={<DistrickEvents clubId={clubId} districtId={districtId}/>} />
           <Route path="reports" element={<ClubReports clubId={clubId} />} />
           <Route path="profile" element={<DistrictProfile districtId={districtId} districtSecretaryId={districtSecretaryId} />} /> */}
+            </Route>
           </Route>
-        </Route>
 
-      </Routes>
+        </Routes>
       </PlayerProvider>
     </Router>
   );
