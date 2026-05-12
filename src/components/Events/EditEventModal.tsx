@@ -47,6 +47,8 @@ const EditEventModal: React.FC<any> = ({
         id: '',
         tshirt_size_Status: false,
         certificateTemplatePath: '',
+        organiser_logo: '',
+
     });
 
 
@@ -269,6 +271,7 @@ const EditEventModal: React.FC<any> = ({
                 advertisementUrl: event.advertisementUrl || '',
                 tshirt_size_Status: Boolean(event.tshirt_size_Status),
                 certificateTemplatePath: event?.certificateTemplatePath,
+                organiser_logo: event?.organiser_logo || '',
             });
 
             // 🔹 RACES
@@ -460,7 +463,7 @@ const EditEventModal: React.FC<any> = ({
         let bannerUrl = eventData.bannerUrl;
         let advertisementUrl = eventData.advertisementUrl;
         let certificateTemplatePath = eventData?.certificateTemplatePath
-
+        let organiser_logo = eventData?.organiser_logo;
         // if (bannerFile) {
         //   bannerUrl = await handleFileUpload(bannerFile);
         // }
@@ -473,6 +476,7 @@ const EditEventModal: React.FC<any> = ({
             bannerUrl,
             advertisementUrl,
             certificateTemplatePath,
+            organiser_logo,
         };
 
         const racesForSkateCategories = ageGroups.reduce((acc: Record<string, any>, ageGroup) => {
@@ -1014,7 +1018,7 @@ const EditEventModal: React.FC<any> = ({
                         )}
                     </FormField>
 
-                    <FormField label="Certificate Template Image">
+                    <FormField label="Chest Number Template header">
                         {eventData.certificateTemplatePath ? (
                             <a
                                 href={eventData.certificateTemplatePath}
@@ -1060,6 +1064,52 @@ const EditEventModal: React.FC<any> = ({
                         )}
                     </FormField>
 
+<FormField label="organiser Logo ">
+            {eventData.organiser_logo  ? (
+              <a
+                href={eventData.organiser_logo }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                View organiser Logo 
+              </a>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={async (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      try {
+                        const response = await axios.post(
+                          'https://sportims-api.justvy.com/upload/image/',
+                          formData
+                        );
+                        if (response.data?.url) {
+                          setAdFile(file);
+                          setEventData((prev: any) => ({
+                            ...prev,
+                            organiser_logo : response.data.url,
+                          }));
+                        }
+                      } catch (error) {
+                        alert('Failed to upload organiser_logo image. Please try again.');
+                      }
+                    }
+                  }}
+                  className="mt-2 text-sm text-gray-600"
+                  // disabled={isReadOnly}
+                />
+                <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+              </div>
+            )}
+          </FormField>
+          
                     <div className='flex justify-end pb-1'>
                         <Button
                             onClick={() => handleSaveEvent()}

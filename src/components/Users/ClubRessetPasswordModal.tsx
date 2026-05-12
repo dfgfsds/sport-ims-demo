@@ -1,26 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, Smartphone, ShieldCheck } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface ClubModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any) => void;
     club: any | null;
-    mode: 'create' | 'edit' | 'view' | 'resetPassword';
 }
 
 const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
     isOpen,
     onClose,
-    onSave,
     club,
-    mode,
 }) => {
     const [formData, setFormData] = useState({
         mobileNumber: '',
         newPassword: '',
     });
-
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
     const [errors, setErrors] = useState({
         mobileNumber: '',
         password: '',
@@ -42,7 +40,7 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const newErrors = {
@@ -68,14 +66,32 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
             return;
         }
 
-        onSave({
-            clubId: club?.clubId,
-            mobileNumber: formData.mobileNumber,
-            newPassword: formData.newPassword,
-        });
+        // onSave({
+        //     clubId: club?.clubId,
+        //     mobileNumber: formData.mobileNumber,
+        //     newPassword: formData.newPassword,
+        // });
 
-        onClose();
+        // handleResetPassword();
+        try {
+            const res = await axios.put(`${baseURL}/clubs/reset-password`, {
+                clubId: club?.clubId,
+                mobileNumber: formData.mobileNumber,
+                newPassword: formData.newPassword,
+            });
+            if (res.status === 200) {
+                onClose();
+                toast.success(res?.data?.message || 'Password reset successfully!')
+            }
+
+
+        } catch (error: any) {
+            // console.error('Save failed:', error);
+            toast.success(error?.res?.data?.message || 'Password failed to reset!')
+        }
     };
+
+
 
     return (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -150,8 +166,8 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
                             }}
                             maxLength={10}
                             className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-4 ${errors.mobileNumber
-                                    ? 'border-red-400 focus:ring-red-100'
-                                    : 'border-gray-300 focus:border-orange-500 focus:ring-orange-100'
+                                ? 'border-red-400 focus:ring-red-100'
+                                : 'border-gray-300 focus:border-orange-500 focus:ring-orange-100'
                                 }`}
                         />
 
