@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, Smartphone, ShieldCheck } from 'lucide-react';
+import { X, Lock, Smartphone, ShieldCheck, EyeOff, Eye } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -7,12 +7,14 @@ interface ClubModalProps {
     isOpen: boolean;
     onClose: () => void;
     club: any | null;
+    fetchClubs: () => void;
 }
 
 const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
     isOpen,
     onClose,
     club,
+    fetchClubs,
 }) => {
     const [formData, setFormData] = useState({
         mobileNumber: '',
@@ -23,6 +25,7 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
         mobileNumber: '',
         password: '',
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -81,6 +84,7 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
             });
             if (res.status === 200) {
                 onClose();
+                fetchClubs();   
                 toast.success(res?.data?.message || 'Password reset successfully!')
             }
 
@@ -179,26 +183,50 @@ const ClubResetPasswordModal: React.FC<ClubModalProps> = ({
                     </div>
 
                     {/* New Password */}
+                    {/* New Password */}
+
                     <div>
                         <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                             <Lock size={16} />
                             New Password
                         </label>
 
-                        <input
-                            type="password"
-                            placeholder="Enter new password"
-                            value={formData.newPassword}
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    newPassword: e.target.value,
-                                })
-                            }
-                            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                        />
-                    </div>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter new password"
+                                value={formData.newPassword}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        newPassword: e.target.value,
+                                    })
+                                }
+                                className={`w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none transition focus:ring-4 ${errors.password
+                                    ? 'border-red-400 focus:ring-red-100'
+                                    : 'border-gray-300 focus:border-orange-500 focus:ring-orange-100'
+                                    }`}
+                            />
 
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-orange-500"
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
+
+                        {errors.password && (
+                            <p className="mt-1 text-xs text-red-500">
+                                {errors.password}
+                            </p>
+                        )}
+                    </div>
                     {/* Footer */}
                     <div className="flex items-center justify-end gap-3 border-t pt-5">
                         <button

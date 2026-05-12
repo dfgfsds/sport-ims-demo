@@ -63,6 +63,468 @@ const EventParticipantsDetails =
         const [heatLimits, setHeatLimits] = useState<any>({
             REST: 7,
         });
+            const [isLoading, setIsLoading] = useState(false);
+
+      const handleExportProfileImages = async () => {
+    try {
+
+        setIsLoading(true);
+
+        const response = await axios.get(
+            `${baseURL}/registrations/export-images/${eventId}`
+        );
+
+        if (
+            response.data.success &&
+            response.data.download_link
+        ) {
+
+            window.open(
+                response.data.download_link,
+                "_blank"
+            );
+
+        } else {
+
+            alert(
+                response.data.message ||
+                "Export failed"
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Export Error:",
+            error
+        );
+
+        alert(
+            "Something went wrong while exporting images."
+        );
+
+    } finally {
+
+        setIsLoading(false);
+    }
+};
+
+const handleExport = () => {
+
+    if (!eventData?.length) return;
+
+    // Get all unique race names from participants
+    const raceNames = Array.from(
+        new Set(
+            eventData.flatMap((item: any) =>
+                Array.isArray(item.selectedRaces)
+                    ? item.selectedRaces.map((race: any) =>
+                        (race?.name || '').toUpperCase()
+                    )
+                    : []
+            )
+        )
+    );
+
+    const excelHeader = [
+        'S.NO',
+        'REG NO',
+        'SKATE TYPE',
+        'AGE GROUP',
+        'DOB',
+        'GENDER',
+        'NAME',
+        'AADHAR NUMBER',
+        'CLUB NAME',
+        'CHEST NO',
+        ...raceNames,
+        'REGISTRATION DATE',
+        'PAYMENT STATUS',
+        'AMOUNT',
+        'DISTRICT',
+        'STATE',
+        'PROFILE IMAGE URL',
+    ];
+
+    // MAIN EXCEL ROWS
+    const excelRows = filteredData.map(
+        (p: any, index: number) => {
+
+            const selectedRaceNames = Array.isArray(p.selectedRaces)
+                ? p.selectedRaces.map((race: any) =>
+                    (race?.name || '').toUpperCase()
+                )
+                : [];
+
+            const raceColumns = raceNames.map(
+                (raceName: string) =>
+                    selectedRaceNames.includes(raceName)
+                        ? 'YES'
+                        : ''
+            );
+
+            return [
+                (index + 1).toString(),
+                (p.id || '').toString(),
+                (p.skateCategory || '').toUpperCase(),
+                (p.ageGroup || '').toUpperCase(),
+
+                p.dob
+                    ? new Date(p.dob)
+                        .toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                        })
+                        .toUpperCase()
+                    : '',
+
+                (p.player?.gender || '').toUpperCase(),
+
+                (
+                    p.player?.name ||
+                    p.name ||
+                    ''
+                ).toUpperCase(),
+
+                (
+                    p.player?.aadharNumber ||
+                    ''
+                ).toUpperCase(),
+
+                (
+                    p.clubName ||
+                    ''
+                ).toUpperCase(),
+
+                (
+                    p.chestNumber ||
+                    ''
+                ).toString(),
+
+                ...raceColumns,
+
+                p.regDate
+                    ? new Date(p.regDate)
+                        .toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                        })
+                        .toUpperCase()
+                    : '',
+
+                Number(p.amountPaid) > 0
+                    ? 'PAID'
+                    : 'NOT PAID',
+
+                (
+                    p.amountPaid ||
+                    ''
+                ).toString(),
+
+                (
+                    p.player?.districtName ||
+                    ''
+                ).toUpperCase(),
+
+                (
+                    p.player?.stateName ||
+                    ''
+                ).toUpperCase(),
+
+                p.profileImageUrl || '',
+            ];
+        }
+    );
+
+    const wb = XLSX.utils.book_new();
+
+    // MAIN SHEET
+    const ws = XLSX.utils.aoa_to_sheet([
+        excelHeader,
+        ...excelRows,
+    ]);
+
+    XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        'Participants'
+    );
+
+    // HEADER STYLE
+    const headerCellStyle = {
+        fill: {
+            patternType: 'solid',
+            fgColor: { rgb: '1976D2' },
+        },
+        font: {
+            color: { rgb: 'FFFFFF' },
+            bold: true,
+        },
+    };
+
+    excelHeader.forEach((_, idx) => {
+
+        const cellRef =
+            XLSX.utils.encode_cell({
+                r: 0,
+                c: idx,
+            });
+
+        if (!ws[cellRef]) {
+            ws[cellRef] = {
+                t: 's',
+                v: excelHeader[idx],
+            };
+        }
+
+        ws[cellRef].s =
+            headerCellStyle;
+    });
+
+    // GROUP FUNCTION
+    const groupBy = (
+        arr: any[],
+        key: string
+    ) => {
+
+        return arr.reduce(
+            (acc, item) => {
+
+                const groupKey =
+                    (
+                        item[key] ||
+                        ''
+                    ).toUpperCase();
+
+                if (!acc[groupKey]) {
+                    acc[groupKey] = [];
+                }
+
+                acc[groupKey].push(item);
+
+                return acc;
+
+            },
+            {} as Record<string, any[]>
+        );
+    };
+
+    // CATEGORY SHEETS
+    const skateCategories = [
+        'Beginner',
+        'Fancy',
+        'Inline',
+        'Quad',
+    ];
+
+    skateCategories.forEach(
+        (category) => {
+
+            const catParticipants =
+                filteredData.filter(
+                    (p: any) =>
+                        (
+                            p.skateCategory ||
+                            ''
+                        ).toUpperCase() ===
+                        category.toUpperCase()
+                );
+
+            const ageGroups =
+                groupBy(
+                    catParticipants,
+                    'ageGroup'
+                );
+
+            let sheetRows: any[] = [];
+
+            let serial = 1;
+
+            Object.keys(ageGroups).forEach(
+                (ageGroup) => {
+
+                    const group =
+                        ageGroups[ageGroup];
+
+                    const males =
+                        group.filter(
+                            (p: any) =>
+                                (
+                                    p.player?.gender ||
+                                    ''
+                                ).toUpperCase() ===
+                                'MALE'
+                        );
+
+                    const females =
+                        group.filter(
+                            (p: any) =>
+                                (
+                                    p.player?.gender ||
+                                    ''
+                                ).toUpperCase() ===
+                                'FEMALE'
+                        );
+
+                    // MALES
+                    sheetRows.push([
+                        `${ageGroup} - MALE`
+                    ]);
+
+                    sheetRows.push(
+                        excelHeader
+                    );
+
+                    males.forEach(
+                        (p: any) => {
+
+                            const selectedRaceNames =
+                                Array.isArray(
+                                    p.selectedRaces
+                                )
+                                    ? p.selectedRaces.map(
+                                        (race: any) =>
+                                            (
+                                                race?.name ||
+                                                ''
+                                            ).toUpperCase()
+                                    )
+                                    : [];
+
+                            const raceColumns =
+                                raceNames.map(
+                                    (
+                                        raceName: string
+                                    ) =>
+                                        selectedRaceNames.includes(
+                                            raceName
+                                        )
+                                            ? 'YES'
+                                            : ''
+                                );
+
+                            sheetRows.push([
+                                serial++,
+                                p.id || '',
+                                (
+                                    p.skateCategory ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.ageGroup ||
+                                    ''
+                                ).toUpperCase(),
+                                p.player?.gender ||
+                                '',
+                                (
+                                    p.player?.name ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.clubName ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.chestNumber ||
+                                    ''
+                                ).toString(),
+                                ...raceColumns,
+                            ]);
+                        }
+                    );
+
+                    // FEMALES
+                    sheetRows.push([
+                        `${ageGroup} - FEMALE`
+                    ]);
+
+                    sheetRows.push(
+                        excelHeader
+                    );
+
+                    females.forEach(
+                        (p: any) => {
+
+                            const selectedRaceNames =
+                                Array.isArray(
+                                    p.selectedRaces
+                                )
+                                    ? p.selectedRaces.map(
+                                        (race: any) =>
+                                            (
+                                                race?.name ||
+                                                ''
+                                            ).toUpperCase()
+                                    )
+                                    : [];
+
+                            const raceColumns =
+                                raceNames.map(
+                                    (
+                                        raceName: string
+                                    ) =>
+                                        selectedRaceNames.includes(
+                                            raceName
+                                        )
+                                            ? 'YES'
+                                            : ''
+                                );
+
+                            sheetRows.push([
+                                serial++,
+                                p.id || '',
+                                (
+                                    p.skateCategory ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.ageGroup ||
+                                    ''
+                                ).toUpperCase(),
+                                p.player?.gender ||
+                                '',
+                                (
+                                    p.player?.name ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.clubName ||
+                                    ''
+                                ).toUpperCase(),
+                                (
+                                    p.chestNumber ||
+                                    ''
+                                ).toString(),
+                                ...raceColumns,
+                            ]);
+                        }
+                    );
+                }
+            );
+
+            if (sheetRows.length > 0) {
+
+                const wsCat =
+                    XLSX.utils.aoa_to_sheet(
+                        sheetRows
+                    );
+
+                XLSX.utils.book_append_sheet(
+                    wb,
+                    wsCat,
+                    category
+                );
+            }
+        }
+    );
+
+    XLSX.writeFile(
+        wb,
+        'event_participants.xlsx'
+    );
+};
         const [limitRules, setLimitRules] =
             useState<any[]>([
                 {
@@ -838,8 +1300,43 @@ const EventParticipantsDetails =
                         label="Event Heats PDF"
                         onClick={() => setShowHeatsModal(true)}
                     />
-                </div>
 
+                 
+                    
+                </div>
+   <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
+                        <button
+                            disabled={isLoading}
+                            onClick={handleExportProfileImages}
+                            className={`flex items-center px-3 py-2 text-white rounded-md text-sm transition-colors ${isLoading
+                                ? "bg-blue-400 cursor-not-allowed"
+                                : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                        >
+                            {isLoading ? (
+                                <>
+                                    {/* Spinning Loader Icon (Optional) */}
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Exporting...
+                                </>
+                            ) : (
+                                <>
+                                    <Download size={16} className="mr-1" />
+                                    Profile image Export
+                                </>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleExport}
+                            className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                        >
+                            <Download size={16} className="mr-1" />
+                            Export
+                        </button>
+                    </div>
                 {/* TABLE */}
                 <Card>
                     <div className="bg-[#76933c] p-3 text-sm font-bold uppercase text-white">
@@ -1382,7 +1879,7 @@ const EventParticipantsDetails =
                                                     </div>
 
                                                     {/* Preview */}
-                                                    <div className="mt-3 rounded-xl bg-[#f4f7ed] p-3">
+                                                    {/* <div className="mt-3 rounded-xl bg-[#f4f7ed] p-3">
                                                         <p className="text-[10px] font-bold uppercase text-gray-500">
                                                             Generated Key
                                                         </p>
@@ -1398,7 +1895,7 @@ const EventParticipantsDetails =
                                                                 .join("_") ||
                                                                 "REST"}
                                                         </p>
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                             )
                                         )}
@@ -1439,7 +1936,7 @@ const EventParticipantsDetails =
                                     </div>
 
                                     {/* JSON Preview */}
-                                    <div className="rounded-2xl bg-black p-4">
+                                    {/* <div className="rounded-2xl bg-black p-4">
                                         <p className="mb-2 text-xs font-bold uppercase text-green-400">
                                             Generated JSON
                                         </p>
@@ -1451,7 +1948,7 @@ const EventParticipantsDetails =
                                                 2
                                             )}
                                         </pre>
-                                    </div>
+                                    </div> */}
                                 </div>
 
                                 <button
