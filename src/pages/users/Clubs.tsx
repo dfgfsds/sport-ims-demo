@@ -32,7 +32,7 @@ const clubsData: React.FC = () => {
   const handleResetPassword = (club: Club) => {
     setSelectedClub(club);
     setResetPasswordMode(true);
-    setShowModal(true);
+    // setShowModal(true);
   };
 
   const handleSort = (key: string) => {
@@ -319,9 +319,7 @@ const clubsData: React.FC = () => {
       <ClubRessetPasswordModal
         isOpen={resetPasswordMode}
         onClose={() => setResetPasswordMode(false)}
-        onSave={handleSaveClub}
         club={selectedClub}
-        mode={modalMode}
       />
     </div>
   );

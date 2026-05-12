@@ -51,6 +51,317 @@ const EventParticipantsDetails =
         const [selectedGender, setSelectedGender] = useState(''); // 'male' or 'female'
         const [isExporting, setIsExporting] = useState(false);
 
+        const [showHeatsModal, setShowHeatsModal] = useState(false);
+
+        const [heatGender, setHeatGender] = useState('');
+        const [heatSkateCategory, setHeatSkateCategory] = useState('');
+        const [heatRaceId, setHeatRaceId] = useState('');
+        const [heatAgeGroupId, setHeatAgeGroupId] = useState('');
+        const [heatLimit, setHeatLimit] = useState('');
+
+        const [isHeatDownloading, setIsHeatDownloading] = useState(false);
+        const [heatLimits, setHeatLimits] = useState<any>({
+            REST: 7,
+        });
+        const [limitRules, setLimitRules] =
+            useState<any[]>([
+                {
+                    skate: heatSkateCategory || '',
+                    gender: heatGender || '',
+                    raceId: heatRaceId || '',
+                    ageGroupId: heatAgeGroupId || '',
+                    limit: '',
+                },
+            ]);
+
+        useEffect(() => {
+            setLimitRules((prev: any) => {
+                if (!prev.length) return prev;
+
+                // only first empty rule auto fill
+                if (
+                    prev[0].skate ||
+                    prev[0].gender ||
+                    prev[0].raceId ||
+                    prev[0].ageGroupId
+                ) {
+                    return prev;
+                }
+
+                const updated = [...prev];
+
+                updated[0] = {
+                    ...updated[0],
+                    skate: heatSkateCategory,
+                    gender: heatGender,
+                    raceId: heatRaceId,
+                    ageGroupId: heatAgeGroupId,
+                };
+
+                return updated;
+            });
+        }, [
+            heatSkateCategory,
+            heatGender,
+            heatRaceId,
+            heatAgeGroupId,
+        ]);
+
+        const [restLimit, setRestLimit] =
+            useState(7);
+
+        const addLimitRule = () => {
+            setLimitRules((prev) => [
+                ...prev,
+                {
+                    skate: heatSkateCategory || '',
+                    gender: heatGender || '',
+                    raceId: heatRaceId || '',
+                    ageGroupId: heatAgeGroupId || '',
+                    limit: '',
+                },
+            ]);
+        };
+
+        const removeLimitRule = (
+            index: number
+        ) => {
+            setLimitRules((prev) =>
+                prev.filter(
+                    (_: any, i: number) =>
+                        i !== index
+                )
+            );
+        };
+
+        const updateLimitRule = (
+            index: number,
+            field: string,
+            value: any
+        ) => {
+            setLimitRules((prev) =>
+                prev.map(
+                    (
+                        rule: any,
+                        i: number
+                    ) =>
+                        i === index
+                            ? {
+                                ...rule,
+                                [field]: value,
+                            }
+                            : rule
+                )
+            );
+        };
+
+
+        const buildLimitObject = () => {
+            const result: any = {};
+
+            limitRules.forEach(
+                (rule: any) => {
+                    const keys = [];
+
+                    if (rule.skate) {
+                        keys.push(
+                            rule.skate.toUpperCase()
+                        );
+                    }
+
+                    if (rule.gender) {
+                        keys.push(
+                            rule.gender.toUpperCase()
+                        );
+                    }
+
+                    if (rule.raceId) {
+                        keys.push(rule.raceId);
+                    }
+
+                    if (rule.ageGroupId) {
+                        keys.push(
+                            rule.ageGroupId
+                        );
+                    }
+
+                    const finalKey =
+                        keys.join("_");
+
+                    if (
+                        finalKey &&
+                        rule.limit
+                    ) {
+                        result[finalKey] =
+                            Number(
+                                rule.limit
+                            );
+                    }
+                }
+            );
+
+            result["REST"] =
+                Number(restLimit);
+
+            return result;
+        };
+
+        const skateCategories = useMemo(() => {
+            const unique = Array.from(
+                new Set(
+                    eventData.map(
+                        (item: any) =>
+                            item?.skateCategory?.toUpperCase()
+                    )
+                )
+            );
+
+            return unique.filter(Boolean);
+        }, [eventData]);
+
+        const genders = useMemo(() => {
+            const unique = Array.from(
+                new Set(
+                    eventData.map(
+                        (item: any) =>
+                            item?.player?.gender?.toUpperCase()
+                    )
+                )
+            );
+
+            return unique.filter(Boolean);
+        }, [eventData]);
+
+        const buildLimitKey = () => {
+            const parts = [];
+
+            if (heatSkateCategory) {
+                parts.push(
+                    heatSkateCategory.toUpperCase()
+                );
+            }
+
+            if (heatGender) {
+                parts.push(
+                    heatGender.toUpperCase()
+                );
+            }
+
+            if (heatRaceId) {
+                parts.push(heatRaceId);
+            }
+
+            if (heatAgeGroupId) {
+                parts.push(heatAgeGroupId);
+            }
+
+            return parts.join("_");
+        };
+
+        const updateHeatLimit = (
+            value: string
+        ) => {
+            const key =
+                buildLimitKey() || "REST";
+
+            setHeatLimits((prev: any) => ({
+                ...prev,
+                [key]: Number(value),
+            }));
+        };
+
+        const ageGroups = useMemo(() => {
+            const unique = Array.from(
+                new Map(
+                    eventData.map((item: any) => [
+                        item.ageGroupId,
+                        {
+                            id: item.ageGroupId,
+                            name: item.ageGroup || 'Unknown',
+                        },
+                    ])
+                ).values()
+            );
+
+            return unique;
+        }, [eventData]);
+
+        const races = useMemo(() => {
+            const raceMap = new Map();
+
+            eventData.forEach((item: any) => {
+                item.selectedRaces?.forEach((race: any) => {
+                    raceMap.set(race.id, race);
+                });
+            });
+
+            return Array.from(raceMap.values());
+        }, [eventData]);
+
+        const exportEventHeatsPdf = async () => {
+            setIsHeatDownloading(true);
+
+            try {
+                const params = new URLSearchParams();
+
+                params.append("eventId", eventId || "");
+
+                if (heatGender) {
+                    params.append("gender", heatGender);
+                }
+
+                if (heatSkateCategory) {
+                    params.append("skateCategory", heatSkateCategory);
+                }
+
+                if (heatRaceId) {
+                    params.append("raceId", heatRaceId);
+                }
+
+                if (heatAgeGroupId) {
+                    params.append("ageGroupId", heatAgeGroupId);
+                }
+
+                params.append(
+                    "limit",
+                    JSON.stringify(
+                        buildLimitObject()
+                    )
+                );
+
+                const response = await axios.get(
+                    `${baseURL}stats_export/event-heats-pdf?${params.toString()}`
+                );
+
+                if (response.data?.success && response.data?.download_link) {
+                    const link = response.data.download_link;
+
+                    const anchor = document.createElement("a");
+                    anchor.href = link;
+                    anchor.target = "_blank";
+
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+
+                    setShowHeatsModal(false);
+
+                    setHeatGender('');
+                    setHeatSkateCategory('');
+                    setHeatRaceId('');
+                    setHeatAgeGroupId('');
+                    setHeatLimit('');
+                    setLimitRules([])
+                } else {
+                    alert("Download link not found");
+                }
+            } catch (error: any) {
+                console.error(error);
+                alert(error?.response?.data?.error || "Something went wrong , please try again.");
+            } finally {
+                setIsHeatDownloading(false);
+            }
+        };
 
         // Get unique clubs for the dropdown
         const clubs = useMemo(() => {
@@ -316,37 +627,70 @@ const EventParticipantsDetails =
             }
         }
 
+        // const exportRaceGenderAge = async () => {
+        //     if (!selectedGender) return;
+
+        //     setIsExporting(true);
+        //     try {
+        //         const response = await axios.get(
+        //             `${baseURL}stats_export/event-race-summary-excel?eventId=${eventId}&gender=${selectedGender}`
+        //         );
+
+        //         if (response.data.success && response.data.download_link) {
+        //             const link = response.data.download_link;
+        //             const anchor = document.createElement("a");
+        //             anchor.href = link;
+        //             anchor.setAttribute("download", `Race_Gender_Age_${selectedGender}.xlsx`);
+        //             document.body.appendChild(anchor);
+        //             anchor.click();
+        //             document.body.removeChild(anchor);
+
+        //             console.log("Download started successfully.");
+        //             setShowRaceModal(false); // Success aanathum modal close aagum
+        //             setSelectedGender('');   // Reset selection
+        //         } else {
+        //             alert("Failed to generate download link. Please try again.");
+        //         }
+        //     } catch (error) {
+        //         console.error("Export error:", error);
+        //         alert("An error occurred while exporting the Excel report.");
+        //     } finally {
+        //         setIsExporting(false);
+        //     }
+        // };
         const exportRaceGenderAge = async () => {
-            if (!selectedGender) return;
+            // Machan, gender select pannala na 'all' nu consider pannikalam
+            const genderParam = selectedGender || '';
 
             setIsExporting(true);
             try {
                 const response = await axios.get(
-                    `${baseURL}stats_export/event-race-summary-excel?eventId=${eventId}&gender=${selectedGender}`
+                    `${baseURL}stats_export/event-race-summary-excel?eventId=${eventId}&gender=${genderParam}`
                 );
 
                 if (response.data.success && response.data.download_link) {
                     const link = response.data.download_link;
                     const anchor = document.createElement("a");
                     anchor.href = link;
-                    anchor.setAttribute("download", `Race_Gender_Age_${selectedGender}.xlsx`);
+                    anchor.setAttribute("download", `Race_Summary_${genderParam}.xlsx`);
                     document.body.appendChild(anchor);
                     anchor.click();
                     document.body.removeChild(anchor);
 
-                    console.log("Download started successfully.");
-                    setShowRaceModal(false); // Success aanathum modal close aagum
-                    setSelectedGender('');   // Reset selection
+                    setShowRaceModal(false);
+                    setSelectedGender('');
                 } else {
-                    alert("Failed to generate download link. Please try again.");
+                    alert("Failed to generate download link.");
                 }
             } catch (error) {
                 console.error("Export error:", error);
-                alert("An error occurred while exporting the Excel report.");
+                alert("An error occurred during export.");
             } finally {
                 setIsExporting(false);
             }
         };
+
+
         const columns = [
             {
                 key: 'name',
@@ -489,6 +833,10 @@ const EventParticipantsDetails =
                         //     exportRaceGenderAge
                         // }
                         onClick={() => setShowRaceModal(true)}
+                    />
+                    <SummaryBtn
+                        label="Event Heats PDF"
+                        onClick={() => setShowHeatsModal(true)}
                     />
                 </div>
 
@@ -643,28 +991,34 @@ const EventParticipantsDetails =
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="mb-3 block text-xs font-bold text-gray-500 uppercase">Select Gender</label>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <label className="mb-3 block text-xs font-bold text-gray-500 uppercase">Select Gender (Optional)</label>
+                                    <div className="grid grid-cols-3 gap-2"> {/* Grid 3 ah maathiruken */}
                                         <button
                                             onClick={() => setSelectedGender('male')}
-                                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'male' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
+                                            className={`rounded-lg py-2 text-xs font-bold border-2 transition-all ${selectedGender === 'male' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
                                         >
                                             MALE
                                         </button>
                                         <button
                                             onClick={() => setSelectedGender('female')}
-                                            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold border-2 transition-all ${selectedGender === 'female' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
+                                            className={`rounded-lg py-2 text-xs font-bold border-2 transition-all ${selectedGender === 'female' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
                                         >
                                             FEMALE
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedGender('')}
+                                            className={`rounded-lg py-2 text-xs font-bold border-2 transition-all ${selectedGender === '' ? 'border-[#76933c] bg-[#f4f7ed] text-[#76933c]' : 'border-gray-100 text-gray-500'}`}
+                                        >
+                                            ALL
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Download Button - Only enabled if gender is selected */}
+                                {/* Download Button - Ippo gender illana kooda work aagum */}
                                 <button
                                     onClick={exportRaceGenderAge}
-                                    disabled={!selectedGender || isExporting}
-                                    className={`w-full rounded-lg py-3 font-bold uppercase text-white shadow-md transition-all ${(!selectedGender || isExporting) ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#76933c] hover:bg-[#5e7630] active:scale-95'}`}
+                                    disabled={isExporting}
+                                    className={`w-full rounded-lg py-3 font-bold uppercase text-white shadow-md transition-all ${isExporting ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#76933c] hover:bg-[#5e7630] active:scale-95'}`}
                                 >
                                     {isExporting ? 'Exporting...' : 'Download Excel'}
                                 </button>
@@ -672,6 +1026,451 @@ const EventParticipantsDetails =
                         </div>
                     </div>
                 )}
+
+                {showHeatsModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4">
+                        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+
+                            <div className="mb-5 flex items-center justify-between border-b pb-3">
+                                <h2 className="text-xl font-bold">
+                                    Export Event Heats PDF
+                                </h2>
+
+                                <button
+                                    onClick={() => setShowHeatsModal(false)}
+                                    className="text-gray-400 hover:text-red-500"
+                                >
+                                    <X size={22} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+
+                                {/* Gender */}
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">
+                                        Gender
+                                    </label>
+
+                                    <select
+                                        value={heatGender}
+                                        onChange={(e) =>
+                                            setHeatGender(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="w-full rounded-lg border p-3"
+                                    >
+                                        <option value="">
+                                            ALL
+                                        </option>
+
+                                        {genders.map(
+                                            (gender: string) => (
+                                                <option
+                                                    key={gender}
+                                                    value={gender}
+                                                >
+                                                    {gender}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </div>
+
+                                {/* Skate Category */}
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">
+                                        Skate Category
+                                    </label>
+
+                                    <select
+                                        value={heatSkateCategory}
+                                        onChange={(e) =>
+                                            setHeatSkateCategory(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="w-full rounded-lg border p-3"
+                                    >
+                                        <option value="">
+                                            ALL
+                                        </option>
+
+                                        {skateCategories.map(
+                                            (category: string) => (
+                                                <option
+                                                    key={category}
+                                                    value={category}
+                                                >
+                                                    {category}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </div>
+
+                                {/* Race */}
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">
+                                        Race
+                                    </label>
+
+                                    <select
+                                        value={heatRaceId}
+                                        onChange={(e) => setHeatRaceId(e.target.value)}
+                                        className="w-full rounded-lg border p-3"
+                                    >
+                                        <option value="">ALL</option>
+
+                                        {races.map((race: any) => (
+                                            <option key={race.id} value={race.id}>
+                                                {race.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Age Group */}
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">
+                                        Age Group
+                                    </label>
+
+                                    <select
+                                        value={heatAgeGroupId}
+                                        onChange={(e) => setHeatAgeGroupId(e.target.value)}
+                                        className="w-full rounded-lg border p-3"
+                                    >
+                                        <option value="">ALL</option>
+
+                                        {ageGroups.map((age: any) => (
+                                            <option key={age.id} value={age.id}>
+                                                {age.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-5">
+
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-sm font-black uppercase text-gray-800">
+                                                Heat Limits Configuration
+                                            </h3>
+
+                                            {/* <p className="text-xs text-gray-500 mt-1">
+                                                Configure multiple heat rules dynamically
+                                            </p> */}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={addLimitRule}
+                                            className="rounded-lg bg-[#76933c] px-4 py-2 text-xs font-bold uppercase text-white shadow hover:bg-[#5e7630]"
+                                        >
+                                            + Add Rule
+                                        </button>
+                                    </div>
+
+                                    {/* Rules */}
+                                    <div className="max-h-[450px] space-y-4 overflow-y-auto pr-1">
+
+                                        {limitRules.map(
+                                            (
+                                                rule: any,
+                                                index: number
+                                            ) => (
+                                                <div
+                                                    key={index}
+                                                    className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+                                                >
+
+                                                    {/* Top */}
+                                                    <div className="mb-4 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-xs font-black uppercase tracking-wide text-[#76933c]">
+                                                                Rule #{index + 1}
+                                                            </p>
+
+                                                            <p className="text-[10px] text-gray-400">
+                                                                Configure specific heat limit
+                                                            </p>
+                                                        </div>
+
+                                                        {limitRules.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    removeLimitRule(index)
+                                                                }
+                                                                className="rounded-lg bg-red-50 px-3 py-1 text-[10px] font-bold uppercase text-red-500 hover:bg-red-100"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Grid */}
+                                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+                                                        {/* Skate */}
+                                                        <div>
+                                                            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">
+                                                                Skate
+                                                            </label>
+
+                                                            <select
+                                                                value={rule.skate}
+                                                                onChange={(e) =>
+                                                                    updateLimitRule(
+                                                                        index,
+                                                                        "skate",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none focus:border-[#76933c]"
+                                                            >
+                                                                <option value="">
+                                                                    ALL
+                                                                </option>
+
+                                                                {skateCategories.map(
+                                                                    (
+                                                                        category: string
+                                                                    ) => (
+                                                                        <option
+                                                                            key={category}
+                                                                            value={category}
+                                                                        >
+                                                                            {category}
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Gender */}
+                                                        <div>
+                                                            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">
+                                                                Gender
+                                                            </label>
+
+                                                            <select
+                                                                value={rule.gender}
+                                                                onChange={(e) =>
+                                                                    updateLimitRule(
+                                                                        index,
+                                                                        "gender",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none focus:border-[#76933c]"
+                                                            >
+                                                                <option value="">
+                                                                    ALL
+                                                                </option>
+
+                                                                {genders.map(
+                                                                    (
+                                                                        gender: string
+                                                                    ) => (
+                                                                        <option
+                                                                            key={gender}
+                                                                            value={gender}
+                                                                        >
+                                                                            {gender}
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Race */}
+                                                        <div>
+                                                            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">
+                                                                Race
+                                                            </label>
+
+                                                            <select
+                                                                value={rule.raceId}
+                                                                onChange={(e) =>
+                                                                    updateLimitRule(
+                                                                        index,
+                                                                        "raceId",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none focus:border-[#76933c]"
+                                                            >
+                                                                <option value="">
+                                                                    ALL
+                                                                </option>
+
+                                                                {races.map(
+                                                                    (race: any) => (
+                                                                        <option
+                                                                            key={race.id}
+                                                                            value={race.id}
+                                                                        >
+                                                                            {race.name}
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Age Group */}
+                                                        <div>
+                                                            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">
+                                                                Age Group
+                                                            </label>
+
+                                                            <select
+                                                                value={
+                                                                    rule.ageGroupId
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateLimitRule(
+                                                                        index,
+                                                                        "ageGroupId",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none focus:border-[#76933c]"
+                                                            >
+                                                                <option value="">
+                                                                    ALL
+                                                                </option>
+
+                                                                {ageGroups.map(
+                                                                    (age: any) => (
+                                                                        <option
+                                                                            key={age.id}
+                                                                            value={age.id}
+                                                                        >
+                                                                            {age.name}
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Limit */}
+                                                    <div className="mt-3">
+                                                        <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">
+                                                            Heat Limit
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            min={1}
+                                                            value={rule.limit}
+                                                            onChange={(e) =>
+                                                                updateLimitRule(
+                                                                    index,
+                                                                    "limit",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            placeholder="Enter limit"
+                                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none focus:border-[#76933c]"
+                                                        />
+                                                    </div>
+
+                                                    {/* Preview */}
+                                                    <div className="mt-3 rounded-xl bg-[#f4f7ed] p-3">
+                                                        <p className="text-[10px] font-bold uppercase text-gray-500">
+                                                            Generated Key
+                                                        </p>
+
+                                                        <p className="mt-1 break-all text-xs font-black text-[#76933c]">
+                                                            {[
+                                                                rule.skate,
+                                                                rule.gender,
+                                                                rule.raceId,
+                                                                rule.ageGroupId,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join("_") ||
+                                                                "REST"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+
+                                    {/* REST LIMIT */}
+                                    <div className="rounded-2xl border-2 border-dashed border-[#76933c]/30 bg-[#f4f7ed] p-4">
+
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-sm font-black uppercase text-[#76933c]">
+                                                    REST Limit
+                                                </h3>
+
+                                                <p className="text-[10px] text-gray-500">
+                                                    Applies to unmatched heats
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-full bg-[#76933c] px-3 py-1 text-[10px] font-black text-white">
+                                                DEFAULT
+                                            </div>
+                                        </div>
+
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={restLimit}
+                                            onChange={(e) =>
+                                                setRestLimit(
+                                                    Number(
+                                                        e.target.value
+                                                    )
+                                                )
+                                            }
+                                            className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm outline-none focus:border-[#76933c]"
+                                        />
+                                    </div>
+
+                                    {/* JSON Preview */}
+                                    <div className="rounded-2xl bg-black p-4">
+                                        <p className="mb-2 text-xs font-bold uppercase text-green-400">
+                                            Generated JSON
+                                        </p>
+
+                                        <pre className="overflow-auto text-xs text-white">
+                                            {JSON.stringify(
+                                                buildLimitObject(),
+                                                null,
+                                                2
+                                            )}
+                                        </pre>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={exportEventHeatsPdf}
+                                    disabled={isHeatDownloading}
+                                    className={`w-full rounded-lg py-3 font-bold uppercase text-white transition-all ${isHeatDownloading
+                                        ? "bg-gray-400"
+                                        : "bg-[#76933c] hover:bg-[#5e7630]"
+                                        }`}
+                                >
+                                    {isHeatDownloading
+                                        ? "Generating..."
+                                        : "Download PDF"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </div>
         );
     };
