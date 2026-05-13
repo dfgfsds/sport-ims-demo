@@ -60,14 +60,14 @@ const clubsData: React.FC = () => {
     setclubsData(clubs);
   }, [clubs, fetchClubs]);
 
+  const getClubExcelData = async () => {
+    const res = await axios.get(`${baseURL}clubs/all-details`);
+    if (res) {
+      setclubsExcelData(res.data);
+    }
+  }
 
   useEffect(() => {
-    const getClubExcelData = async () => {
-      const res = await axios.get(`${baseURL}clubs/all-details`);
-      if (res) {
-        setclubsExcelData(res.data);
-      }
-    }
     getClubExcelData();
   }, [])
 
@@ -320,7 +320,7 @@ const clubsData: React.FC = () => {
         isOpen={resetPasswordMode}
         onClose={() => setResetPasswordMode(false)}
         club={selectedClub}
-             fetchClubs={fetchClubs()}
+        fetchClubs={() =>{ fetchClubs(),getClubExcelData()}}
       />
     </div>
   );

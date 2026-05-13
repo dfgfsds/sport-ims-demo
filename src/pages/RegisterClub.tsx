@@ -576,7 +576,7 @@ const RegisterClub: React.FC = () => {
                     /> */}
 
                     {/* DOCUMENTS */}
-                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+                    {/* <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
 
                         <h3 className="mb-3 text-lg font-semibold text-yellow-800">
                             Required Documents
@@ -588,7 +588,7 @@ const RegisterClub: React.FC = () => {
                             <li>• Facility ownership documents</li>
                             <li>• Insurance certificate</li>
                         </ul>
-                    </div>
+                    </div> */}
 
                     {/* ERROR */}
                     {error && (
